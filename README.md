@@ -2,8 +2,6 @@
 
 A full-stack task manager built with React, Fastify, PostgreSQL, and Drizzle ORM.
 
-Your job is to implement the `// TODO` sections. See [TASKS.md](./TASKS.md) for the exercise list.
-
 ## Prerequisites
 
 - Node.js 20+

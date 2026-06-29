@@ -3,7 +3,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
-import TaskForm from "./components/TaskForm.tsx";
 import TaskList from "./components/TaskList.tsx";
 import "./index.css";
 
@@ -15,8 +14,6 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <TaskList /> },
-      { path: "tasks/new", element: <TaskForm /> },
-      { path: "tasks/:id/edit", element: <TaskForm /> },
     ],
   },
 ]);
