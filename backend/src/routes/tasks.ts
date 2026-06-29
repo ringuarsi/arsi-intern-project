@@ -1,6 +1,8 @@
+import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { db } from "../db/index.js";
+import { tasks } from "../db/schema.js";
 import type { Task } from "../db/schema.js";
 
 const createTaskSchema = z.object({
@@ -16,21 +18,22 @@ const updateTaskSchema = z.object({
 });
 
 const taskRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /api/tasks — return all tasks
+  // GET /tasks
   fastify.get("/tasks", async (_req, reply) => {
-    // TODO: query all rows from the tasks table using `db`
-    // Hint: look at drizzle-orm docs for `db.select().from(tasks)`
-    const result: Task[] = [];
+    const result = await db.select().from(tasks);
     return reply.send(result);
   });
 
-  // GET /api/tasks/:id — return a single task
+  // GET /tasks/:id
   fastify.get<{ Params: { id: string } }>("/tasks/:id", async (req, reply) => {
     const id = Number(req.params.id);
 
-    // TODO: query a single task by id
-    // If not found, return reply.status(404).send({ error: "Task not found" })
-    const task: Task | undefined = undefined;
+    const result = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, id));
+
+    const task = result[0];
 
     if (!task) {
       return reply.status(404).send({ error: "Task not found" });
@@ -39,31 +42,42 @@ const taskRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send(task);
   });
 
-  // POST /api/tasks — create a new task
+  // POST /tasks
   fastify.post("/tasks", async (req, reply) => {
     const parsed = createTaskSchema.safeParse(req.body);
+
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.flatten() });
     }
 
-    // TODO: insert a new task row into the database and return it
-    // Hint: use db.insert(tasks).values(parsed.data).returning()
-    const created: Task | undefined = undefined;
+    const result = await db
+      .insert(tasks)
+      .values({
+        ...parsed.data,
+        createdAt: new Date(),
+      })
+      .returning();
 
-    return reply.status(201).send(created);
+    return reply.status(201).send(result[0]);
   });
 
-  // PUT /api/tasks/:id — update an existing task
+  // PUT /tasks/:id
   fastify.put<{ Params: { id: string } }>("/tasks/:id", async (req, reply) => {
     const id = Number(req.params.id);
+
     const parsed = updateTaskSchema.safeParse(req.body);
+
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.flatten() });
     }
 
-    // TODO: update the task with the given id and return the updated row
-    // If not found, return reply.status(404).send({ error: "Task not found" })
-    const updated: Task | undefined = undefined;
+    const result = await db
+      .update(tasks)
+      .set(parsed.data)
+      .where(eq(tasks.id, id))
+      .returning();
+
+    const updated = result[0];
 
     if (!updated) {
       return reply.status(404).send({ error: "Task not found" });
@@ -72,14 +86,18 @@ const taskRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send(updated);
   });
 
-  // DELETE /api/tasks/:id — delete a task
+  // DELETE /tasks/:id
   fastify.delete<{ Params: { id: string } }>("/tasks/:id", async (req, reply) => {
     const id = Number(req.params.id);
 
-    // TODO: delete the task with the given id
-    // If not found, return reply.status(404).send({ error: "Task not found" })
-    // On success, return reply.status(204).send()
-    void id;
+    const result = await db
+      .delete(tasks)
+      .where(eq(tasks.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return reply.status(404).send({ error: "Task not found" });
+    }
 
     return reply.status(204).send();
   });

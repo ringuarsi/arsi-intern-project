@@ -1,13 +1,16 @@
-import { pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
 
-export const statusEnum = pgEnum("status", ["todo", "in_progress", "done"]);
-
-export const tasks = pgTable("tasks", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
+export const tasks = sqliteTable("tasks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
   description: text("description"),
-  status: statusEnum("status").default("todo").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  status: text("status", {
+    enum: ["todo", "in_progress", "done"],
+  })
+    .default("todo")
+    .notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull(),
 });
 
 export type Task = typeof tasks.$inferSelect;

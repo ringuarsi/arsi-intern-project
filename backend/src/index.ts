@@ -10,4 +10,7 @@ await app.register(cors, {
 
 await app.register(taskRoutes, { prefix: "/api" });
 
+await app.get("/", async (req, reply) => {
+  reply.send({ message: "Welcome to the Task API!" });
+});
 await app.listen({ port: 3000, host: "0.0.0.0" });

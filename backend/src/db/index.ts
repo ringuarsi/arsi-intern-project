@@ -1,7 +1,8 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import Database from "better-sqlite3"
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.js";
+import { sqliteTable } from "drizzle-orm/sqlite-core";
 
-const client = postgres(process.env.DATABASE_URL!);
+const sqlite = new Database("sqlite.db");
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(sqlite, { schema });
