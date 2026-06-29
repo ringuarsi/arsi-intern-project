@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
 import TaskList from "./components/TaskList.tsx";
 import "./index.css";
+import TaskForm from "./components/TaskForm.tsx";
 
 const queryClient = new QueryClient();
 
