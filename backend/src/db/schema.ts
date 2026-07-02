@@ -10,7 +10,7 @@ export const tasks = sqliteTable("tasks", {
   title: text("title").notNull(),
 
   description: text("description"),
-
+  
   status: text("status", {
     enum: ["todo", "in_progress", "done"],
   })

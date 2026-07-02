@@ -1,5 +1,5 @@
 import { authenticate } from "../middleware/auth.js";
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { db } from "../db/index.js";
@@ -18,15 +18,44 @@ const updateTaskSchema = z.object({
   status: z.enum(["todo", "in_progress", "done"]).optional(),
 });
 
+const searchTaskSchema = z.object({
+  search: z.string().optional(),
+  sort: z.enum(["asc", "desc"]).optional(),
+});
+
 const taskRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /tasks
-  fastify.get(
+  // GET /SEARCH /tasks
+  fastify.get<{
+    Querystring: {
+      search?: string;
+    };
+  }>(
     "/tasks",
     {
       preHandler: authenticate,
     },
-    async (_req, reply) => {
+    async (req, reply) => {
+      const parsed = searchTaskSchema.safeParse(req.query);
+
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.flatten(),
+        });
+      }
+
+      const { search } = parsed.data;
+
+      if (search) {
+        const result = await db
+          .select()
+          .from(tasks)
+          .where(like(tasks.title, `%${search}%`));
+
+        return reply.send(result);
+      }
+
       const result = await db.select().from(tasks);
+
       return reply.send(result);
     }
   );
@@ -72,6 +101,7 @@ const taskRoutes: FastifyPluginAsync = async (fastify) => {
         .insert(tasks)
         .values({
           ...parsed.data,
+          
           createdAt: new Date(),
         })
         .returning();
